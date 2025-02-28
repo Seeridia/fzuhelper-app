@@ -7,10 +7,9 @@ import PageContainer from '@/components/page-container';
 import PickerModal from '@/components/picker-modal';
 import FloatModal from '@/components/ui/float-modal';
 import { Text } from '@/components/ui/text';
-import useApiRequest from '@/hooks/useApiRequest';
+import useApiRequest, { LoadingState } from '@/hooks/useApiRequest';
 import { FAQ_EMPTY_ROOM } from '@/lib/FAQ';
 import { type IntRange } from '@/types/int-range';
-import { LoadingState } from '@/types/loading-state';
 import { Stack } from 'expo-router';
 import { CalendarDaysIcon } from 'lucide-react-native';
 import { DateTime } from 'luxon';
@@ -76,12 +75,16 @@ export default function EmptyRoomPage() {
   const [isCampusPickerVisible, setCampusPickerVisible] = useState(false);
   const campusData = CAMPUS_LIST.map(campus => ({ value: campus, label: campus }));
 
-  const [roomData, loadingState] = useApiRequest(getApiV1CommonClassroomEmpty, {
-    date: selectedDate.toFormat(DATE_FMT),
-    campus: selectedCampus,
-    startTime: selectedRange.start.toString(),
-    endTime: selectedRange.end.toString(),
-  });
+  const params = useMemo(
+    () => ({
+      date: selectedDate.toFormat(DATE_FMT),
+      campus: selectedCampus,
+      startTime: selectedRange.start.toString(),
+      endTime: selectedRange.end.toString(),
+    }),
+    [selectedCampus, selectedDate, selectedRange.end, selectedRange.start],
+  );
+  const { data: roomData, loadingState } = useApiRequest(getApiV1CommonClassroomEmpty, params);
 
   // 处理 Modal 显示事件
   const handleModalVisible = useCallback(() => {
@@ -136,12 +139,12 @@ export default function EmptyRoomPage() {
         </Pressable>
       </View>
       <PageContainer>
-        {loadingState === LoadingState.PENDING ? (
-          <Loading className="flex-1" />
-        ) : loadingState === LoadingState.FAILED ? (
-          <Text>获取空教室数据失败</Text> // FIXME: 替换为加载失败图片
-        ) : (
+        {loadingState === LoadingState.SUCCESS ? (
           <ClassroomList data={roomData} />
+        ) : loadingState === LoadingState.PENDING ? (
+          <Loading className="flex-1" />
+        ) : (
+          <Text>获取空教室数据失败</Text> // FIXME: 替换为加载失败图片
         )}
         {/* 日期选择器 */}
         <FloatModal

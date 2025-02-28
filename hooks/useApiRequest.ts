@@ -1,6 +1,7 @@
-import { useSafeResponseSolve } from '@/hooks/useSafeResponseSolve';
 import { AxiosResponse } from 'axios';
 import { useCallback, useEffect, useState } from 'react';
+
+import { useSafeResponseSolve } from '@/hooks/useSafeResponseSolve';
 
 export enum LoadingState {
   PENDING = 'pending',
